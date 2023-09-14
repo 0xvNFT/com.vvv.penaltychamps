@@ -1,6 +1,8 @@
 package com.vvv.penaltychamps;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -22,6 +24,10 @@ public class GameView extends SurfaceView implements Runnable {
     private final Ball ball;
     private final int screenX;
     private final int screenY;
+    private float initialTouchX, initialTouchY;
+    private boolean dragging = false;
+    private Bitmap backgroundImage;
+
     public GameView(Context context) {
         super(context);
 
@@ -37,6 +43,9 @@ public class GameView extends SurfaceView implements Runnable {
         screenX = point.x;
         screenY = point.y;
 
+        backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.ingame_bg);
+        backgroundImage = Bitmap.createScaledBitmap(backgroundImage, screenX, screenY, false);
+
         ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2);
         ball.setY(screenY - ball.getBitmap().getHeight() - 100);
     }
@@ -48,10 +57,29 @@ public class GameView extends SurfaceView implements Runnable {
                 synchronized (lock) {
                     score++;
                 }
+                float touchX = event.getX();
+                float touchY = event.getY();
+                if (touchX >= ball.getX() && touchX <= (ball.getX() + ball.getBitmap().getWidth()) &&
+                        touchY >= ball.getY() && touchY <= (ball.getY() + ball.getBitmap().getHeight())) {
+                    dragging = true;
+                    initialTouchX = touchX;
+                    initialTouchY = touchY;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
+                if (dragging) {
+                    float moveX = event.getX() - initialTouchX;
+                    float moveY = event.getY() - initialTouchY;
+                    ball.setX(ball.getX() + (int) moveX);
+                    ball.setY(ball.getY() + (int) moveY);
+                    initialTouchX = event.getX();
+                    initialTouchY = event.getY();
+                }
                 break;
             case MotionEvent.ACTION_UP:
+                dragging = false;
+                ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2);
+                ball.setY(screenY - ball.getBitmap().getHeight() - 100);
                 break;
         }
         return true;
@@ -90,11 +118,20 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void draw() {
         if (surfaceHolder.getSurface().isValid()) {
-            canvas = surfaceHolder.lockCanvas();
+            try {
+                canvas = surfaceHolder.lockCanvas();
 
-            canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
+                //canvas.drawColor(Color.BLACK);
 
-            surfaceHolder.unlockCanvasAndPost(canvas);
+                if (canvas != null) {
+                    canvas.drawBitmap(backgroundImage, 0, 0, null);
+                    canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
+                }
+            } finally {
+                if (canvas != null) {
+                    surfaceHolder.unlockCanvasAndPost(canvas);
+                }
+            }
         }
     }
 
