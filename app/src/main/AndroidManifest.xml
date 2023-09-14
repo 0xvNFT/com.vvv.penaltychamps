@@ -15,10 +15,12 @@
 
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="landscape"
             android:exported="false" />
 
         <activity
             android:name=".SplashActivity"
+            android:screenOrientation="landscape"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
