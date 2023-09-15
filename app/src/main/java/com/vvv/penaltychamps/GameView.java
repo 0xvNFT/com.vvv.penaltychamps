@@ -4,8 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -24,10 +26,12 @@ public class GameView extends SurfaceView implements Runnable {
     private final Ball ball;
     private final int screenX;
     private final int screenY;
-    private float initialTouchX, initialTouchY;
-    private boolean dragging = false;
     private Bitmap backgroundImage;
-
+    private final Rect[] hotspots = new Rect[9];
+    private final int goalPostWidth = 300;
+    private final int goalPostHeight = 120;
+    private final int goalPostX;
+    private final int goalPostY;
     public GameView(Context context) {
         super(context);
 
@@ -48,42 +52,112 @@ public class GameView extends SurfaceView implements Runnable {
 
         ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2);
         ball.setY(screenY - ball.getBitmap().getHeight() - 100);
+        int rectWidth = screenX / 3;
+        int rectHeight = screenY / 6;
+
+        goalPostX = ((screenX / 2 - goalPostWidth / 2) - 20 + 3);
+        goalPostY = (screenY / 2 - goalPostHeight / 2) - 65;
+
+        int distanceFromGoal = 30;
+        for (int i = 0; i < hotspots.length; i++) {
+            int left, top, right, bottom;
+            switch (i) {
+                case 0:
+                    // Top-left corner
+                    left = goalPostX - distanceFromGoal;
+                    top = goalPostY - distanceFromGoal;
+                    break;
+                case 1:
+                    // Top-right corner
+                    left = goalPostX + goalPostWidth;
+                    top = goalPostY - distanceFromGoal;
+                    break;
+                case 2:
+                    // Bottom-left corner
+                    left = goalPostX - distanceFromGoal;
+                    top = goalPostY + goalPostHeight;
+                    break;
+                case 3:
+                    // Bottom-right corner
+                    left = goalPostX + goalPostWidth;
+                    top = goalPostY + goalPostHeight;
+                    break;
+                case 4:
+                    // Middle-left
+                    left = goalPostX - distanceFromGoal;
+                    top = goalPostY + goalPostHeight / 2 - distanceFromGoal / 2;
+                    break;
+                case 5:
+                    // Middle-right
+                    left = goalPostX + goalPostWidth;
+                    top = goalPostY + goalPostHeight / 2 - distanceFromGoal / 2;
+                    break;
+                case 6:
+                    // Top-middle
+                    left = goalPostX + goalPostWidth / 2 - distanceFromGoal / 2;
+                    top = goalPostY - distanceFromGoal;
+                    break;
+                case 7:
+                    // Middle
+                    left = goalPostX + goalPostWidth / 2 - distanceFromGoal / 2;
+                    top = goalPostY + goalPostHeight / 2 - distanceFromGoal / 2;
+                    break;
+                case 8:
+                    // Bottom-middle
+                    left = goalPostX + goalPostWidth / 2 - distanceFromGoal / 2;
+                    top = goalPostY + goalPostHeight;
+                    break;
+                default:
+                    left = 0;
+                    top = 0;
+                    break;
+            }
+            right = left + distanceFromGoal;
+            bottom = top + distanceFromGoal;
+            hotspots[i] = new Rect(left, top, right, bottom);
+        }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 synchronized (lock) {
+                    for (int i = 0; i < hotspots.length; i++) {
+                        if (hotspots[i].contains(x, y)) {
+                            kickBallTowards(i);
+                            break;
+                        }
+                    }
                     score++;
-                }
-                float touchX = event.getX();
-                float touchY = event.getY();
-                if (touchX >= ball.getX() && touchX <= (ball.getX() + ball.getBitmap().getWidth()) &&
-                        touchY >= ball.getY() && touchY <= (ball.getY() + ball.getBitmap().getHeight())) {
-                    dragging = true;
-                    initialTouchX = touchX;
-                    initialTouchY = touchY;
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (dragging) {
-                    float moveX = event.getX() - initialTouchX;
-                    float moveY = event.getY() - initialTouchY;
-                    ball.setX(ball.getX() + (int) moveX);
-                    ball.setY(ball.getY() + (int) moveY);
-                    initialTouchX = event.getX();
-                    initialTouchY = event.getY();
-                }
                 break;
             case MotionEvent.ACTION_UP:
-                dragging = false;
-                ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2);
-                ball.setY(screenY - ball.getBitmap().getHeight() - 100);
                 break;
         }
         return true;
     }
+
+    private void kickBallTowards(int hotspotIndex) {
+        synchronized (lock) {
+            int targetX = hotspots[hotspotIndex].centerX();
+            int targetY = hotspots[hotspotIndex].centerY();
+
+            int dx = targetX - ball.getX();
+            int dy = targetY - ball.getY();
+
+            double length = Math.sqrt(dx * dx + dy * dy);
+            int velocityX = (int) (dx / length * 10);
+            int velocityY = (int) (dy / length * 10);
+
+            ball.setVelocity(velocityX, velocityY);
+        }
+    }
+
 
 
     @Override
@@ -113,19 +187,40 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void update() {
         synchronized (lock) {
+            int newX = ball.getX() + ball.getVelocityX();
+            int newY = ball.getY() + ball.getVelocityY();
+
+            if (newX < 0) newX = 0;
+            if (newX > screenX - ball.getBitmap().getWidth())
+                newX = screenX - ball.getBitmap().getWidth();
+            if (newY < 0) newY = 0;
+            if (newY > screenY - ball.getBitmap().getHeight())
+                newY = screenY - ball.getBitmap().getHeight();
+
+            ball.setX(newX);
+            ball.setY(newY);
         }
     }
+
 
     private void draw() {
         if (surfaceHolder.getSurface().isValid()) {
             try {
                 canvas = surfaceHolder.lockCanvas();
 
-                //canvas.drawColor(Color.BLACK);
-
                 if (canvas != null) {
                     canvas.drawBitmap(backgroundImage, 0, 0, null);
                     canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
+
+                    paint.setColor(Color.CYAN);
+                    int goalPostRight = goalPostX + goalPostWidth;
+                    int goalPostBottom = goalPostY + goalPostHeight;
+                    canvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
+
+                    paint.setColor(Color.RED);
+                    for (Rect hotspot : hotspots) {
+                        canvas.drawRect(hotspot, paint);
+                    }
                 }
             } finally {
                 if (canvas != null) {

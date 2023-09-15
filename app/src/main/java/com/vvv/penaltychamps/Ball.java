@@ -7,11 +7,17 @@ import android.graphics.BitmapFactory;
 public class Ball {
     private final Bitmap bitmap;
     private int x, y;
+    private int velocityX, velocityY;
+
 
     public Ball(Context context) {
         bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ball);
     }
 
+    public void setVelocity(int velocityX, int velocityY) {
+        this.velocityX = velocityX;
+        this.velocityY = velocityY;
+    }
     public int getX() {
         return x;
     }
@@ -30,6 +36,14 @@ public class Ball {
 
     public Bitmap getBitmap() {
         return bitmap;
+    }
+
+    public int getVelocityX() {
+        return velocityX;
+    }
+
+    public int getVelocityY() {
+        return velocityY;
     }
 }
 
