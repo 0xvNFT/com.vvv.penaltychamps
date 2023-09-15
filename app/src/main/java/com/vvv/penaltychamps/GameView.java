@@ -28,8 +28,8 @@ public class GameView extends SurfaceView implements Runnable {
     private final int screenY;
     private Bitmap backgroundImage;
     private final Rect[] hotspots = new Rect[9];
-    private final int goalPostWidth = 300;
-    private final int goalPostHeight = 120;
+    private final int goalPostWidth = 250;
+    private final int goalPostHeight = 100;
     private final int goalPostX;
     private final int goalPostY;
     public GameView(Context context) {
@@ -58,7 +58,7 @@ public class GameView extends SurfaceView implements Runnable {
         goalPostX = ((screenX / 2 - goalPostWidth / 2) - 20 + 3);
         goalPostY = (screenY / 2 - goalPostHeight / 2) - 65;
 
-        int distanceFromGoal = 30;
+        int distanceFromGoal = 40;
         for (int i = 0; i < hotspots.length; i++) {
             int left, top, right, bottom;
             switch (i) {
