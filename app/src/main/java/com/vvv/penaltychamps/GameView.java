@@ -1,5 +1,6 @@
 package com.vvv.penaltychamps;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -116,6 +118,19 @@ public class GameView extends SurfaceView implements Runnable {
             bottom = top + distanceFromGoal;
             hotspots[i] = new Rect(left, top, right, bottom);
         }
+        logHotspotPositions();
+
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void logHotspotPositions() {
+        StringBuilder logMessage = new StringBuilder("Hotspot Positions:\n");
+        for (int i = 0; i < hotspots.length; i++) {
+            Rect hotspot = hotspots[i];
+            logMessage.append(String.format("Hotspot %d: Left: %d, Top: %d, Right: %d, Bottom: %d\n",
+                    i, hotspot.left, hotspot.top, hotspot.right, hotspot.bottom));
+        }
+        Log.d("GameView", logMessage.toString());
     }
 
     @Override
@@ -190,6 +205,13 @@ public class GameView extends SurfaceView implements Runnable {
             int newX = ball.getX() + ball.getVelocityX();
             int newY = ball.getY() + ball.getVelocityY();
 
+            for (Rect hotspot : hotspots) {
+                if (hotspot.contains(newX, newY)) {
+                    ball.setVelocity(0, 0);
+                    return;
+                }
+            }
+
             if (newX < 0) newX = 0;
             if (newX > screenX - ball.getBitmap().getWidth())
                 newX = screenX - ball.getBitmap().getWidth();
@@ -212,12 +234,12 @@ public class GameView extends SurfaceView implements Runnable {
                     canvas.drawBitmap(backgroundImage, 0, 0, null);
                     canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
 
-                    paint.setColor(Color.CYAN);
+                    paint.setColor(Color.TRANSPARENT);
                     int goalPostRight = goalPostX + goalPostWidth;
                     int goalPostBottom = goalPostY + goalPostHeight;
                     canvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
-                    paint.setColor(Color.RED);
+                    paint.setColor(Color.BLUE);
                     for (Rect hotspot : hotspots) {
                         canvas.drawRect(hotspot, paint);
                     }
