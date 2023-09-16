@@ -34,6 +34,8 @@ public class GameView extends SurfaceView implements Runnable {
     private final int goalPostHeight = 100;
     private final int goalPostX;
     private final int goalPostY;
+    private final Goalkeeper goalkeeper;
+
     public GameView(Context context) {
         super(context);
 
@@ -41,6 +43,7 @@ public class GameView extends SurfaceView implements Runnable {
         paint = new Paint();
 
         ball = new Ball(context);
+        goalkeeper = new Goalkeeper(context);
 
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -52,8 +55,12 @@ public class GameView extends SurfaceView implements Runnable {
         backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.ingame_bg);
         backgroundImage = Bitmap.createScaledBitmap(backgroundImage, screenX, screenY, false);
 
-        ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2);
+        ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2 - 20);
         ball.setY(screenY - ball.getBitmap().getHeight() - 100);
+
+        goalkeeper.setX(screenX / 2 - goalkeeper.getBitmap().getWidth() / 2 - 20);
+        goalkeeper.setY(screenY / 2 - goalkeeper.getBitmap().getHeight() / 2);
+
         int rectWidth = screenX / 3;
         int rectHeight = screenY / 6;
 
@@ -232,6 +239,7 @@ public class GameView extends SurfaceView implements Runnable {
 
                 if (canvas != null) {
                     canvas.drawBitmap(backgroundImage, 0, 0, null);
+                    canvas.drawBitmap(goalkeeper.getBitmap(), goalkeeper.getX(), goalkeeper.getY(), null);
                     canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
 
                     paint.setColor(Color.TRANSPARENT);
