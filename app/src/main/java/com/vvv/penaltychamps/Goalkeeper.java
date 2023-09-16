@@ -5,12 +5,49 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 public class Goalkeeper {
-    private final Bitmap bitmap;
+    private final Bitmap stillBitmap;
+    private final Bitmap bottomMiddleLeftBitmap;
+    private final Bitmap bottomMiddleRightBitmap;
+    private final Bitmap topLeftBitmap;
+    private final Bitmap topRightBitmap;
+    private final Bitmap middleBitmap;
+    private Bitmap currentBitmap;
     private int x, y;
 
     public Goalkeeper(Context context) {
-        bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_still);
+        stillBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_still);
+        bottomMiddleLeftBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_bottom_middle_left);
+        bottomMiddleRightBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_bottom_middle_right);
+        topLeftBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_top_left);
+        topRightBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_top_right);
+        middleBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_middle);
+        currentBitmap = stillBitmap;
     }
+
+    public void setBitmapForAction(int hotspotIndex) {
+        switch (hotspotIndex) {
+            case 0:
+            case 6:
+                currentBitmap = topLeftBitmap;
+                break;
+            case 1:
+                currentBitmap = topRightBitmap;
+                break;
+            case 2:
+            case 4:
+                currentBitmap = bottomMiddleLeftBitmap;
+                break;
+            case 3:
+            case 5:
+                currentBitmap = bottomMiddleRightBitmap;
+                break;
+            case 7:
+            case 8:
+                currentBitmap = middleBitmap;
+                break;
+        }
+    }
+
 
     public int getX() {
         return x;
@@ -28,7 +65,7 @@ public class Goalkeeper {
         this.y = y;
     }
 
-    public Bitmap getBitmap() {
-        return bitmap;
+    public Bitmap getCurrentBitmap() {
+        return currentBitmap;
     }
 }
