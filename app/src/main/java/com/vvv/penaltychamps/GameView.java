@@ -166,7 +166,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void kickBallTowards(int hotspotIndex) {
         synchronized (lock) {
-            goalkeeper.setBitmapForAction(hotspotIndex);
+            goalkeeper.setBitmapForAction(hotspotIndex, hotspots[hotspotIndex]);
             int targetX = hotspots[hotspotIndex].centerX();
             int targetY = hotspots[hotspotIndex].centerY();
 
@@ -276,4 +276,3 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 }
-
