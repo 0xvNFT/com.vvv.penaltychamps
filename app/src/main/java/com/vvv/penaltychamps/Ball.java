@@ -9,6 +9,7 @@ public class Ball {
     private int x, y;
     private int velocityX, velocityY;
     private float scale = 1.0f;
+    int hotspotIndex;
 
 
     public Ball(Context context) {
@@ -18,6 +19,14 @@ public class Ball {
     public void setVelocity(int velocityX, int velocityY) {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
+    }
+
+    public int getHotspotIndex() {
+        return hotspotIndex;
+    }
+
+    public void setHotspotIndex(int hotspotIndex) {
+        this.hotspotIndex = hotspotIndex;
     }
 
     public int getVelocityX() {

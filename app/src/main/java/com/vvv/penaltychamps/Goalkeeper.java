@@ -5,8 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 
-import java.util.Random;
-
 public class Goalkeeper {
     private final Bitmap stillBitmap;
     private final Bitmap bottomMiddleLeftBitmap;
@@ -17,6 +15,7 @@ public class Goalkeeper {
     private Bitmap currentBitmap;
     private int x, y;
     private int targetX, targetY;
+    int hotspotIndex;
 
     public Goalkeeper(Context context) {
         stillBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.gk_still);
@@ -57,13 +56,13 @@ public class Goalkeeper {
         this.y = targetY - 50;
     }
 
-    public void setRandomBitmap() {
-        int randomIndex = new Random().nextInt(9);
-        setBitmapForAction(randomIndex, null);
+    public int getHotspotIndex() {
+        return hotspotIndex;
     }
 
-
-
+    public void setHotspotIndex(int hotspotIndex) {
+        this.hotspotIndex = hotspotIndex;
+    }
     public int getX() {
         return x;
     }

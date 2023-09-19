@@ -38,12 +38,14 @@ public class GameView extends SurfaceView implements Runnable {
     private int score;
     private Bitmap backgroundImage;
     private boolean ballKicked = false;
-    private Integer selectedHotspotIndex = null;
+    private final ScoreManager scoreManager;
+    private Integer selectedHotspotIndex = -1;
     public GameView(Context context) {
         super(context);
 
         surfaceHolder = getHolder();
         paint = new Paint();
+        scoreManager = new ScoreManager();
 
         ball = new Ball(context);
         goalkeeper = new Goalkeeper(context);
@@ -150,14 +152,18 @@ public class GameView extends SurfaceView implements Runnable {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 synchronized (lock) {
+                    selectedHotspotIndex = -1;
                     for (int i = 0; i < hotspots.length; i++) {
                         if (hotspots[i].contains(x, y)) {
                             selectedHotspotIndex = i;
+                            ball.setHotspotIndex(i);
                             kickBallTowards(i);
                             break;
                         }
                     }
-                    score++;
+                    if (selectedHotspotIndex != -1 && ball.getHotspotIndex() != goalkeeper.getHotspotIndex()) {
+                        scoreManager.increment();
+                    }
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -268,6 +274,10 @@ public class GameView extends SurfaceView implements Runnable {
                                     (int) (ball.getBitmap().getWidth() * ball.getScale()),
                                     (int) (ball.getBitmap().getHeight() * ball.getScale()), false),
                             ball.getX(), ball.getY(), null);
+
+                    paint.setColor(Color.WHITE);
+                    paint.setTextSize(50);
+                    canvas.drawText("ScoreManager: " + scoreManager.getScore(), 50, 50, paint);
 
                     paint.setColor(Color.TRANSPARENT);
                     int goalPostRight = goalPostX + goalPostWidth;
