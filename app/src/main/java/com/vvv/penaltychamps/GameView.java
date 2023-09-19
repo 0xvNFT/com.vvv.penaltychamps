@@ -38,7 +38,7 @@ public class GameView extends SurfaceView implements Runnable {
     private int score;
     private Bitmap backgroundImage;
     private boolean ballKicked = false;
-
+    private Integer selectedHotspotIndex = null;
     public GameView(Context context) {
         super(context);
 
@@ -152,6 +152,7 @@ public class GameView extends SurfaceView implements Runnable {
                 synchronized (lock) {
                     for (int i = 0; i < hotspots.length; i++) {
                         if (hotspots[i].contains(x, y)) {
+                            selectedHotspotIndex = i;
                             kickBallTowards(i);
                             break;
                         }
@@ -222,7 +223,7 @@ public class GameView extends SurfaceView implements Runnable {
                 float scale = 1.0f;
 
                 for (Rect hotspot : hotspots) {
-                    if (hotspot.contains(newX, newY)) {
+                    if (selectedHotspotIndex != null && hotspots[selectedHotspotIndex].contains(newX, newY)) {
                         ball.setVelocity(0, 0);
                         return;
                     }
@@ -233,7 +234,7 @@ public class GameView extends SurfaceView implements Runnable {
                     int dy = targetY - ball.getY();
 
                     double distance = Math.sqrt(dx * dx + dy * dy);
-                    float tempScale = (float) (1.0 - (distance / 1000.0));
+                    float tempScale = (float) (1.0 - (distance / 500.0));
                     if (tempScale < 0.5) tempScale = 0.5f;
 
                     if (tempScale < scale) scale = tempScale;
@@ -262,7 +263,6 @@ public class GameView extends SurfaceView implements Runnable {
                 if (canvas != null) {
                     canvas.drawBitmap(backgroundImage, 0, 0, null);
                     canvas.drawBitmap(goalkeeper.getCurrentBitmap(), goalkeeper.getX(), goalkeeper.getY(), null);
-                    //canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
 
                     canvas.drawBitmap(Bitmap.createScaledBitmap(ball.getBitmap(),
                                     (int) (ball.getBitmap().getWidth() * ball.getScale()),
@@ -275,8 +275,12 @@ public class GameView extends SurfaceView implements Runnable {
                     canvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
                     paint.setColor(Color.BLUE);
-                    for (Rect hotspot : hotspots) {
-                        canvas.drawRect(hotspot, paint);
+                    if (selectedHotspotIndex == null) {
+                        for (Rect hotspot : hotspots) {
+                            canvas.drawRect(hotspot, paint);
+                        }
+                    } else {
+                        canvas.drawRect(hotspots[selectedHotspotIndex], paint);
                     }
                 }
             } finally {
