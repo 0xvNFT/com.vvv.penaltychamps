@@ -16,6 +16,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import java.util.Random;
+
 public class GameView extends SurfaceView implements Runnable {
 
     private final SurfaceHolder surfaceHolder;
@@ -167,7 +169,9 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void kickBallTowards(int hotspotIndex) {
         synchronized (lock) {
-            goalkeeper.setBitmapForAction(hotspotIndex, hotspots[hotspotIndex]);
+            int randomHotspotIndex = new Random().nextInt(hotspots.length);
+            goalkeeper.setBitmapForAction(randomHotspotIndex, hotspots[randomHotspotIndex]);
+
             int targetX = hotspots[hotspotIndex].centerX();
             int targetY = hotspots[hotspotIndex].centerY();
 
