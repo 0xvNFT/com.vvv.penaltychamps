@@ -18,23 +18,24 @@ import android.view.WindowManager;
 
 public class GameView extends SurfaceView implements Runnable {
 
-    private Thread gameThread;
     private final SurfaceHolder surfaceHolder;
-    private boolean isPlaying;
-    private Canvas canvas;
     private final Paint paint;
     private final Object lock = new Object();
-    private int score;
     private final Ball ball;
     private final int screenX;
     private final int screenY;
-    private Bitmap backgroundImage;
     private final Rect[] hotspots = new Rect[9];
     private final int goalPostWidth = 250;
     private final int goalPostHeight = 100;
     private final int goalPostX;
     private final int goalPostY;
     private final Goalkeeper goalkeeper;
+    private Thread gameThread;
+    private boolean isPlaying;
+    private Canvas canvas;
+    private int score;
+    private Bitmap backgroundImage;
+    private boolean ballKicked = false;
 
     public GameView(Context context) {
         super(context);
@@ -178,9 +179,9 @@ public class GameView extends SurfaceView implements Runnable {
             int velocityY = (int) (dy / length * 10);
 
             ball.setVelocity(velocityX, velocityY);
+            ballKicked = true;
         }
     }
-
 
 
     @Override
@@ -213,25 +214,41 @@ public class GameView extends SurfaceView implements Runnable {
             int newX = ball.getX() + ball.getVelocityX();
             int newY = ball.getY() + ball.getVelocityY();
 
-            for (Rect hotspot : hotspots) {
-                if (hotspot.contains(newX, newY)) {
-                    ball.setVelocity(0, 0);
-                    return;
+            if (ballKicked) {
+                float scale = 1.0f;
+
+                for (Rect hotspot : hotspots) {
+                    if (hotspot.contains(newX, newY)) {
+                        ball.setVelocity(0, 0);
+                        return;
+                    }
+
+                    int targetX = hotspot.centerX();
+                    int targetY = hotspot.centerY();
+                    int dx = targetX - ball.getX();
+                    int dy = targetY - ball.getY();
+
+                    double distance = Math.sqrt(dx * dx + dy * dy);
+                    float tempScale = (float) (1.0 - (distance / 1000.0));
+                    if (tempScale < 0.5) tempScale = 0.5f;
+
+                    if (tempScale < scale) scale = tempScale;
                 }
+
+                ball.setScale(scale);
+
+                if (newX < 0) newX = 0;
+                if (newX > screenX - ball.getBitmap().getWidth() * scale)
+                    newX = (int) (screenX - ball.getBitmap().getWidth() * scale);
+                if (newY < 0) newY = 0;
+                if (newY > screenY - ball.getBitmap().getHeight() * scale)
+                    newY = (int) (screenY - ball.getBitmap().getHeight() * scale);
+
+                ball.setX(newX);
+                ball.setY(newY);
             }
-
-            if (newX < 0) newX = 0;
-            if (newX > screenX - ball.getBitmap().getWidth())
-                newX = screenX - ball.getBitmap().getWidth();
-            if (newY < 0) newY = 0;
-            if (newY > screenY - ball.getBitmap().getHeight())
-                newY = screenY - ball.getBitmap().getHeight();
-
-            ball.setX(newX);
-            ball.setY(newY);
         }
     }
-
 
     private void draw() {
         if (surfaceHolder.getSurface().isValid()) {
@@ -241,7 +258,12 @@ public class GameView extends SurfaceView implements Runnable {
                 if (canvas != null) {
                     canvas.drawBitmap(backgroundImage, 0, 0, null);
                     canvas.drawBitmap(goalkeeper.getCurrentBitmap(), goalkeeper.getX(), goalkeeper.getY(), null);
-                    canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
+                    //canvas.drawBitmap(ball.getBitmap(), ball.getX(), ball.getY(), null);
+
+                    canvas.drawBitmap(Bitmap.createScaledBitmap(ball.getBitmap(),
+                                    (int) (ball.getBitmap().getWidth() * ball.getScale()),
+                                    (int) (ball.getBitmap().getHeight() * ball.getScale()), false),
+                            ball.getX(), ball.getY(), null);
 
                     paint.setColor(Color.TRANSPARENT);
                     int goalPostRight = goalPostX + goalPostWidth;

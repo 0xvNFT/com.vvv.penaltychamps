@@ -8,6 +8,7 @@ public class Ball {
     private final Bitmap bitmap;
     private int x, y;
     private int velocityX, velocityY;
+    private float scale = 1.0f;
 
 
     public Ball(Context context) {
@@ -17,6 +18,22 @@ public class Ball {
     public void setVelocity(int velocityX, int velocityY) {
         this.velocityX = velocityX;
         this.velocityY = velocityY;
+    }
+
+    public int getVelocityX() {
+        return velocityX;
+    }
+
+    public int getVelocityY() {
+        return velocityY;
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
     }
     public int getX() {
         return x;
@@ -38,12 +55,6 @@ public class Ball {
         return bitmap;
     }
 
-    public int getVelocityX() {
-        return velocityX;
-    }
 
-    public int getVelocityY() {
-        return velocityY;
-    }
 }
 
