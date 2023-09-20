@@ -40,6 +40,7 @@ public class GameView extends SurfaceView implements Runnable {
     private boolean ballKicked = false;
     private final ScoreManager scoreManager;
     private Integer selectedHotspotIndex = -1;
+    private boolean scoreUpdated = false;
     public GameView(Context context) {
         super(context);
 
@@ -65,9 +66,6 @@ public class GameView extends SurfaceView implements Runnable {
 
         goalkeeper.setX(screenX / 2 - goalkeeper.getCurrentBitmap().getWidth() / 2 - 20);
         goalkeeper.setY(screenY / 2 - goalkeeper.getCurrentBitmap().getHeight() / 2);
-
-        int rectWidth = screenX / 3;
-        int rectHeight = screenY / 6;
 
         goalPostX = ((screenX / 2 - goalPostWidth / 2) - 20 + 3);
         goalPostY = (screenY / 2 - goalPostHeight / 2) - 65;
@@ -158,11 +156,9 @@ public class GameView extends SurfaceView implements Runnable {
                             selectedHotspotIndex = i;
                             ball.setHotspotIndex(i);
                             kickBallTowards(i);
+                            scoreUpdated = false;
                             break;
                         }
-                    }
-                    if (selectedHotspotIndex != -1 && ball.getHotspotIndex() != goalkeeper.getHotspotIndex()) {
-                        scoreManager.increment();
                     }
                 }
                 break;
@@ -178,6 +174,7 @@ public class GameView extends SurfaceView implements Runnable {
         synchronized (lock) {
             int randomHotspotIndex = new Random().nextInt(hotspots.length);
             goalkeeper.setBitmapForAction(randomHotspotIndex, hotspots[randomHotspotIndex]);
+            goalkeeper.setHotspotIndex(randomHotspotIndex);
 
             int targetX = hotspots[hotspotIndex].centerX();
             int targetY = hotspots[hotspotIndex].centerY();
@@ -229,9 +226,17 @@ public class GameView extends SurfaceView implements Runnable {
                 float scale = 1.0f;
 
                 for (Rect hotspot : hotspots) {
-                    if (selectedHotspotIndex != null && hotspots[selectedHotspotIndex].contains(newX, newY)) {
-                        ball.setVelocity(0, 0);
-                        return;
+                    if (selectedHotspotIndex != null && selectedHotspotIndex >= 0 && selectedHotspotIndex < hotspots.length) {
+                        if (hotspots[selectedHotspotIndex].contains(newX, newY)) {
+                            ball.setVelocity(0, 0);
+                            if (!scoreUpdated) {
+                                if (selectedHotspotIndex != goalkeeper.getHotspotIndex()) { // Check if the ball and the goalkeeper are in the same hotspot
+                                    scoreManager.increment();
+                                }
+                                scoreUpdated = true;
+                            }
+                            return;
+                        }
                     }
 
                     int targetX = hotspot.centerX();
@@ -285,13 +290,14 @@ public class GameView extends SurfaceView implements Runnable {
                     canvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
                     paint.setColor(Color.BLUE);
-                    if (selectedHotspotIndex == null) {
+                    if (selectedHotspotIndex >= 0 && selectedHotspotIndex < hotspots.length) {
+                        canvas.drawRect(hotspots[selectedHotspotIndex], paint);
+                    } else {
                         for (Rect hotspot : hotspots) {
                             canvas.drawRect(hotspot, paint);
                         }
-                    } else {
-                        canvas.drawRect(hotspots[selectedHotspotIndex], paint);
                     }
+
                 }
             } finally {
                 if (canvas != null) {
