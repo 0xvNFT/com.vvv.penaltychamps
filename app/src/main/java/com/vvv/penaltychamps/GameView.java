@@ -40,6 +40,37 @@ public class GameView extends SurfaceView implements Runnable {
     private final ScoreManager scoreManager;
     private Integer selectedHotspotIndex = -1;
     private boolean scoreUpdated = false;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                synchronized (lock) {
+                    if (currentPlayerRole == PlayerRole.SHOOTER) {
+                        selectedHotspotIndex = -1;
+                        for (int i = 0; i < hotspots.length; i++) {
+                            if (hotspots[i].contains(x, y)) {
+                                selectedHotspotIndex = i;
+                                ball.setHotspotIndex(i);
+                                kickBallTowards(i);
+                                scoreUpdated = false;
+                                break;
+                            }
+                        }
+                    } else {
+                        goalkeeper.setHotspotIndex(1);
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return true;
+    }
     private PlayerRole currentPlayerRole = PlayerRole.SHOOTER;
 
     public GameView(Context context) {
@@ -66,7 +97,6 @@ public class GameView extends SurfaceView implements Runnable {
         initializeHotspots();
         logHotspotPositions();
     }
-
     private void setGamePositions() {
         ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2 - 20);
         ball.setY(screenY - ball.getBitmap().getHeight() - 100);
@@ -138,38 +168,6 @@ public class GameView extends SurfaceView implements Runnable {
             hotspots[i] = new Rect(left, top, right, bottom);
         }
     }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int x = (int) event.getX();
-        int y = (int) event.getY();
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                synchronized (lock) {
-                    if (currentPlayerRole == PlayerRole.SHOOTER) {
-                    selectedHotspotIndex = -1;
-                    for (int i = 0; i < hotspots.length; i++) {
-                        if (hotspots[i].contains(x, y)) {
-                            selectedHotspotIndex = i;
-                            ball.setHotspotIndex(i);
-                            kickBallTowards(i);
-                            scoreUpdated = false;
-                            break;
-                        }
-                    }
-                    } else {
-                        goalkeeper.setHotspotIndex(1);
-                    }
-                }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                break;
-            case MotionEvent.ACTION_UP:
-                break;
-        }
-        return true;
-    }
-
     @SuppressLint("DefaultLocale")
     private void logHotspotPositions() {
         StringBuilder logMessage = new StringBuilder("Hotspot Positions:\n");
@@ -277,6 +275,12 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 
+
+    private enum PlayerRole {
+        SHOOTER,
+        GOALKEEPER
+    }
+
     private void draw() {
         if (surfaceHolder.getSurface().isValid()) {
             try {
@@ -320,7 +324,6 @@ public class GameView extends SurfaceView implements Runnable {
             }
         }
     }
-
     private void switchRoles() {
         if (currentPlayerRole == PlayerRole.SHOOTER) {
             currentPlayerRole = PlayerRole.GOALKEEPER;
@@ -333,7 +336,6 @@ public class GameView extends SurfaceView implements Runnable {
         ballKicked = false;
         scoreUpdated = false;
     }
-
     public void resetBallPosition() {
         ball.setX(screenX / 2 - ball.getBitmap().getWidth() / 2 - 20);
         ball.setY(screenY - ball.getBitmap().getHeight() - 100);
@@ -344,11 +346,6 @@ public class GameView extends SurfaceView implements Runnable {
         goalkeeper.setCurrentBitmap();
         goalkeeper.setX(screenX / 2 - goalkeeper.getCurrentBitmap().getWidth() / 2 - 20);
         goalkeeper.setY(screenY / 2 - goalkeeper.getCurrentBitmap().getHeight() / 2);
-    }
-
-    private enum PlayerRole {
-        SHOOTER,
-        GOALKEEPER
     }
 
     public void resume() {
