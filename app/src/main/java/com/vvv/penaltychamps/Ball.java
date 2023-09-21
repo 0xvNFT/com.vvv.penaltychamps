@@ -63,7 +63,5 @@ public class Ball {
     public Bitmap getBitmap() {
         return bitmap;
     }
-
-
 }
 
