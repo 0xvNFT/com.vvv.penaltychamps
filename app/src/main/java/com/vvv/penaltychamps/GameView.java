@@ -41,6 +41,7 @@ public class GameView extends SurfaceView implements Runnable {
     private Integer selectedHotspotIndex = -1;
     private boolean scoreUpdated = false;
     private PlayerRole currentPlayerRole = PlayerRole.SHOOTER;
+    private boolean showAllHotspots = false;
 
     public GameView(Context context) {
         super(context);
@@ -111,6 +112,7 @@ public class GameView extends SurfaceView implements Runnable {
                 goalkeeper.setHotspotIndex(i);
                 moveGoalkeeperToHotspot(i);
                 kickBallTowards(i);
+                showAllHotspots = false;
                 break;
             }
         }
@@ -307,16 +309,17 @@ public class GameView extends SurfaceView implements Runnable {
                     canvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
                     paint.setColor(Color.BLUE);
-                    if (selectedHotspotIndex >= 0 && selectedHotspotIndex < hotspots.length) {
+                    if (currentPlayerRole == PlayerRole.GOALKEEPER && showAllHotspots) {
+                        for (Rect hotspot : hotspots) {
+                            canvas.drawRect(hotspot, paint);
+                        }
+                    } else if (selectedHotspotIndex >= 0 && selectedHotspotIndex < hotspots.length) {
                         canvas.drawRect(hotspots[selectedHotspotIndex], paint);
-                    } else if (currentPlayerRole == PlayerRole.GOALKEEPER) {
-                        canvas.drawRect(hotspots[goalkeeper.getHotspotIndex()], paint);
                     } else {
                         for (Rect hotspot : hotspots) {
                             canvas.drawRect(hotspot, paint);
                         }
                     }
-
                 }
             } finally {
                 if (canvas != null) {
@@ -351,9 +354,11 @@ public class GameView extends SurfaceView implements Runnable {
         if (currentPlayerRole == PlayerRole.SHOOTER) {
             currentPlayerRole = PlayerRole.GOALKEEPER;
             goalkeeper.setHotspotIndex(7);
+            showAllHotspots = true;
         } else {
             currentPlayerRole = PlayerRole.SHOOTER;
             moveBallRandomly();
+            showAllHotspots = false;
         }
 
         resetBallPosition();
