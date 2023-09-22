@@ -84,6 +84,6 @@ public class Goalkeeper {
     }
 
     public void setCurrentBitmap() {
-        currentBitmap = stillBitmap;
+        this.currentBitmap = this.stillBitmap;
     }
 }
