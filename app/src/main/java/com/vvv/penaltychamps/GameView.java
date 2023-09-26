@@ -14,6 +14,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class GameView extends SurfaceView implements Runnable {
@@ -48,7 +49,7 @@ public class GameView extends SurfaceView implements Runnable {
 
         surfaceHolder = getHolder();
         paint = new Paint();
-        scoreManager = new ScoreManager();
+        scoreManager = new ScoreManager(2);
 
         ball = new Ball(context);
         goalkeeper = new Goalkeeper(context);
@@ -218,10 +219,11 @@ public class GameView extends SurfaceView implements Runnable {
                     ball.setVelocity(0, 0);
                     if (!scoreUpdated) {
                         if (selectedHotspotIndex != goalkeeper.getHotspotIndex()) {
-                            scoreManager.increment();
+                            scoreManager.increment(currentPlayerRole == PlayerRole.SHOOTER ? 0 : 1);
                         }
                         scoreUpdated = true;
                     }
+
                     switchRoles();
                     return;
                 }
@@ -281,7 +283,14 @@ public class GameView extends SurfaceView implements Runnable {
                 if (hotspot.contains(newX, newY)) {
                     ball.setVelocity(0, 0);
                     ballKicked = false;
-                    selectedHotspotIndex = -1;
+
+                    int currentHotspotIndex = Arrays.asList(hotspots).indexOf(hotspot);
+
+                    if (!scoreUpdated && (currentHotspotIndex != goalkeeper.getHotspotIndex())) {
+                        scoreManager.increment(1);
+                        scoreUpdated = true;
+                    }
+
                     switchRoles();
                     return;
                 }
@@ -333,7 +342,11 @@ public class GameView extends SurfaceView implements Runnable {
 
                     paint.setColor(Color.WHITE);
                     paint.setTextSize(50);
-                    backBufferCanvas.drawText("ScoreManager: " + scoreManager.getScore(), 50, 50, paint);
+                    backBufferCanvas.drawText("Player 1 Score: " + scoreManager.getScore(0), 50, 50, paint);
+
+                    float textWidth = paint.measureText("Player 2 Score: " + scoreManager.getScore(1));
+                    int xPos = screenX - (int) textWidth - 50;
+                    backBufferCanvas.drawText("Player 2 Score: " + scoreManager.getScore(1), xPos, 50, paint);
 
                     paint.setTextSize(50);
                     backBufferCanvas.drawText("Current Role: " + currentPlayerRole.toString(), 50, 100, paint);

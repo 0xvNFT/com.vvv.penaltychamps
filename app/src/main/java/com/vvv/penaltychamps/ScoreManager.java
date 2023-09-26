@@ -1,22 +1,18 @@
 package com.vvv.penaltychamps;
 
 public class ScoreManager {
-    private int score;
+    private final int[] scores;
 
-    public ScoreManager() {
-        this.score = 0;
+    public ScoreManager(int playerCount) {
+        scores = new int[playerCount];
     }
 
-    public void increment() {
-        this.score++;
+    public void increment(int playerIndex) {
+        scores[playerIndex]++;
     }
 
-    public void reset() {
-        this.score = 0;
-    }
-
-    public int getScore() {
-        return this.score;
+    public int getScore(int playerIndex) {
+        return scores[playerIndex];
     }
 }
 
