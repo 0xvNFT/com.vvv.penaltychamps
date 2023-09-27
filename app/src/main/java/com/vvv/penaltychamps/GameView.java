@@ -44,6 +44,8 @@ public class GameView extends SurfaceView implements Runnable {
     private final Bitmap backBuffer;
     private final Canvas backBufferCanvas;
     private boolean requireNewTouchForGoalkeeper = true;
+    private final Bitmap circleBitmap, crossBitmap;
+
     public GameView(Context context) {
         super(context);
 
@@ -63,6 +65,9 @@ public class GameView extends SurfaceView implements Runnable {
 
         backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.ingame_bg);
         backgroundImage = Bitmap.createScaledBitmap(backgroundImage, screenX, screenY, false);
+
+        circleBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.circle);
+        crossBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cross);
 
         backBuffer = Bitmap.createBitmap(screenX, screenY, Bitmap.Config.ARGB_8888);
         backBufferCanvas = new Canvas(backBuffer);
@@ -219,7 +224,9 @@ public class GameView extends SurfaceView implements Runnable {
                     ball.setVelocity(0, 0);
                     if (!scoreUpdated) {
                         if (selectedHotspotIndex != goalkeeper.getHotspotIndex()) {
-                            scoreManager.increment(currentPlayerRole == PlayerRole.SHOOTER ? 0 : 1);
+                            scoreManager.increment(0, "goal");
+                        } else {
+                            scoreManager.increment(0, "save");
                         }
                         scoreUpdated = true;
                     }
@@ -285,9 +292,12 @@ public class GameView extends SurfaceView implements Runnable {
                     ballKicked = false;
 
                     int currentHotspotIndex = Arrays.asList(hotspots).indexOf(hotspot);
-
-                    if (!scoreUpdated && (currentHotspotIndex != goalkeeper.getHotspotIndex())) {
-                        scoreManager.increment(1);
+                    if (!scoreUpdated) {
+                        if (currentHotspotIndex != goalkeeper.getHotspotIndex()) {
+                            scoreManager.increment(1, "goal");
+                        } else {
+                            scoreManager.increment(1, "save");
+                        }
                         scoreUpdated = true;
                     }
 
@@ -342,14 +352,30 @@ public class GameView extends SurfaceView implements Runnable {
 
                     paint.setColor(Color.WHITE);
                     paint.setTextSize(50);
-                    backBufferCanvas.drawText("Player 1 Score: " + scoreManager.getScore(0), 50, 50, paint);
+                    int p1ScoreX = 200;
+                    int p1ScoreY = 100;
+                    for (String action : scoreManager.player1Actions) {
+                        Bitmap toDraw = action.equals("goal") ? circleBitmap : crossBitmap;
+                        backBufferCanvas.drawBitmap(toDraw, p1ScoreX, p1ScoreY, paint);
+                        p1ScoreX += 60;
+                    }
 
-                    float textWidth = paint.measureText("Player 2 Score: " + scoreManager.getScore(1));
-                    int xPos = screenX - (int) textWidth - 50;
-                    backBufferCanvas.drawText("Player 2 Score: " + scoreManager.getScore(1), xPos, 50, paint);
+                    int p2ScoreX = screenX - 200;
+                    int p2ScoreY = 100;
+                    for (String action : scoreManager.player2Actions) {
+                        Bitmap toDraw = action.equals("goal") ? circleBitmap : crossBitmap;
+                        backBufferCanvas.drawBitmap(toDraw, p2ScoreX, p2ScoreY, paint);
+                        p2ScoreX -= 60;
+                    }
+
+//                    backBufferCanvas.drawText("Player 1 Score: " + scoreManager.getScore(0), 50, 50, paint);
+//
+//                    float textWidth = paint.measureText("Player 2 Score: " + scoreManager.getScore(1));
+//                    int xPos = screenX - (int) textWidth - 50;
+//                    backBufferCanvas.drawText("Player 2 Score: " + scoreManager.getScore(1), xPos, 50, paint);
 
                     paint.setTextSize(50);
-                    backBufferCanvas.drawText("Current Role: " + currentPlayerRole.toString(), 50, 100, paint);
+                    backBufferCanvas.drawText("Current Role: " + currentPlayerRole.toString(), 50, 50, paint);
 
                     paint.setColor(Color.TRANSPARENT);
                     int goalPostRight = goalPostX + goalPostWidth;
