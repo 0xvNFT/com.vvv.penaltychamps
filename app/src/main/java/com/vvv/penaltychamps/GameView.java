@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -45,6 +46,9 @@ public class GameView extends SurfaceView implements Runnable {
     private final Canvas backBufferCanvas;
     private boolean requireNewTouchForGoalkeeper = true;
     private final Bitmap circleBitmap, crossBitmap;
+    boolean messageDisplayed = false;
+    private String gameMessage = "";
+
 
     public GameView(Context context) {
         super(context);
@@ -223,11 +227,17 @@ public class GameView extends SurfaceView implements Runnable {
                 if (hotspots[selectedHotspotIndex].contains(newX, newY)) {
                     ball.setVelocity(0, 0);
                     if (!scoreUpdated) {
+
                         if (selectedHotspotIndex != goalkeeper.getHotspotIndex()) {
                             scoreManager.increment(0, "goal");
+                            Log.d("GameStatus", "Goal detected.");
+                            updateGameMessage("GOAL!", false);
                         } else {
                             scoreManager.increment(0, "save");
+                            Log.d("GameStatus", "Save detected.");
+                            updateGameMessage("SAVED!", false);
                         }
+
                         scoreUpdated = true;
                     }
 
@@ -293,11 +303,17 @@ public class GameView extends SurfaceView implements Runnable {
 
                     int currentHotspotIndex = Arrays.asList(hotspots).indexOf(hotspot);
                     if (!scoreUpdated) {
+
                         if (currentHotspotIndex != goalkeeper.getHotspotIndex()) {
                             scoreManager.increment(1, "goal");
+                            Log.d("GameStatus", "Goal detected.");
+                            updateGameMessage("GOAL!", false);
                         } else {
                             scoreManager.increment(1, "save");
+                            Log.d("GameStatus", "Save detected.");
+                            updateGameMessage("SAVED!", false);
                         }
+
                         scoreUpdated = true;
                     }
 
@@ -369,7 +385,6 @@ public class GameView extends SurfaceView implements Runnable {
                     }
 
 //                    backBufferCanvas.drawText("Player 1 Score: " + scoreManager.getScore(0), 50, 50, paint);
-//
 //                    float textWidth = paint.measureText("Player 2 Score: " + scoreManager.getScore(1));
 //                    int xPos = screenX - (int) textWidth - 50;
 //                    backBufferCanvas.drawText("Player 2 Score: " + scoreManager.getScore(1), xPos, 50, paint);
@@ -394,6 +409,15 @@ public class GameView extends SurfaceView implements Runnable {
                             backBufferCanvas.drawRect(hotspot, paint);
                         }
                     }
+
+                    paint.setColor(Color.WHITE);
+                    paint.setTextSize(100);
+                    Rect bounds = new Rect();
+                    paint.getTextBounds(gameMessage, 0, gameMessage.length(), bounds);
+                    int x = (screenX - bounds.width()) / 2;
+                    int y = (screenY + bounds.height()) / 2;
+
+                    backBufferCanvas.drawText(gameMessage, x, y, paint);
 
                     canvas = surfaceHolder.lockCanvas();
                     if (canvas != null) {
@@ -454,19 +478,26 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void switchRoles() {
+
+        if (scoreUpdated) {
+            this.postDelayed(() -> {
+                updateGameMessage("", true);
+                scoreUpdated = false;
+            }, 2000);
+        }
+
         if (currentPlayerRole == PlayerRole.SHOOTER) {
             currentPlayerRole = PlayerRole.GOALKEEPER;
             showAllHotspots = true;
             requireNewTouchForGoalkeeper = true;
         } else {
             currentPlayerRole = PlayerRole.SHOOTER;
-            showAllHotspots = true;
+            showAllHotspots = false;
         }
 
         resetBallPosition();
         resetGoalkeeperPosition();
         ballKicked = false;
-        scoreUpdated = false;
     }
 
     public void resetBallPosition() {
@@ -479,11 +510,26 @@ public class GameView extends SurfaceView implements Runnable {
         goalkeeper.setCurrentBitmap();
         goalkeeper.setX(screenX / 2 - goalkeeper.getCurrentBitmap().getWidth() / 2 - 20);
         goalkeeper.setY(screenY - goalkeeper.getCurrentBitmap().getHeight() - 350);
-
     }
 
     private void moveGoalkeeperToHotspot() {
         goalkeeper.setBitmapForAction(goalkeeper.getHotspotIndex(), hotspots[goalkeeper.getHotspotIndex()]);
+    }
+
+    public void updateGameMessage(String newMessage, boolean shouldClear) {
+        Log.d("GameMessageUpdate", "Before update: " + gameMessage + ", messageDisplayed: " + messageDisplayed);
+
+        if (shouldClear) {
+            gameMessage = "";
+            messageDisplayed = false;
+        } else {
+            if (!messageDisplayed) {
+                gameMessage = newMessage;
+                messageDisplayed = true;
+            }
+        }
+
+        Log.d("GameMessageUpdate", "After update: " + gameMessage + ", messageDisplayed: " + messageDisplayed);
     }
 
 
