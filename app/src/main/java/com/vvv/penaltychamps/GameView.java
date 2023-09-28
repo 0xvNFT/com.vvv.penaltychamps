@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -48,6 +47,8 @@ public class GameView extends SurfaceView implements Runnable {
     private final Bitmap circleBitmap, crossBitmap;
     boolean messageDisplayed = false;
     private String gameMessage = "";
+    private boolean goalkeeperTouchAllowed = true;
+    private boolean shooterTouchAllowed = true;
 
 
     public GameView(Context context) {
@@ -174,11 +175,15 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void handleShooterTouch(int x, int y) {
+        if (!shooterTouchAllowed) {
+            return;
+        }
         selectedHotspotIndex = -1;
         for (int i = 0; i < hotspots.length; i++) {
             if (hotspots[i].contains(x, y)) {
                 selectedHotspotIndex = i;
                 ball.setHotspotIndex(i);
+                shooterTouchAllowed = false;
                 kickBallTowards(i);
                 moveKeeperRandomly();
                 scoreUpdated = false;
@@ -188,13 +193,16 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void handleGoalkeeperTouch(int x, int y) {
+        if (!goalkeeperTouchAllowed) {
+            return;
+        }
         selectedHotspotIndex = -1;
         for (int i = 0; i < hotspots.length; i++) {
             if (hotspots[i].contains(x, y)) {
                 selectedHotspotIndex = i;
                 goalkeeper.setHotspotIndex(i);
+                goalkeeperTouchAllowed = false;
                 requireNewTouchForGoalkeeper = false;
-                resetBallPosition();
                 kickBallTowardsRandom();
                 moveGoalkeeperToHotspot();
                 scoreUpdated = false;
@@ -230,11 +238,9 @@ public class GameView extends SurfaceView implements Runnable {
 
                         if (selectedHotspotIndex != goalkeeper.getHotspotIndex()) {
                             scoreManager.increment(0, "goal");
-                            Log.d("GameStatus", "Goal detected.");
                             updateGameMessage("GOAL!", false);
                         } else {
                             scoreManager.increment(0, "save");
-                            Log.d("GameStatus", "Save detected.");
                             updateGameMessage("SAVED!", false);
                         }
 
@@ -306,11 +312,9 @@ public class GameView extends SurfaceView implements Runnable {
 
                         if (currentHotspotIndex != goalkeeper.getHotspotIndex()) {
                             scoreManager.increment(1, "goal");
-                            Log.d("GameStatus", "Goal detected.");
                             updateGameMessage("GOAL!", false);
                         } else {
                             scoreManager.increment(1, "save");
-                            Log.d("GameStatus", "Save detected.");
                             updateGameMessage("SAVED!", false);
                         }
 
@@ -384,11 +388,6 @@ public class GameView extends SurfaceView implements Runnable {
                         p2ScoreX -= 60;
                     }
 
-//                    backBufferCanvas.drawText("Player 1 Score: " + scoreManager.getScore(0), 50, 50, paint);
-//                    float textWidth = paint.measureText("Player 2 Score: " + scoreManager.getScore(1));
-//                    int xPos = screenX - (int) textWidth - 50;
-//                    backBufferCanvas.drawText("Player 2 Score: " + scoreManager.getScore(1), xPos, 50, paint);
-
                     paint.setTextSize(50);
                     backBufferCanvas.drawText("Current Role: " + currentPlayerRole.toString(), 50, 50, paint);
 
@@ -398,7 +397,7 @@ public class GameView extends SurfaceView implements Runnable {
                     backBufferCanvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
                     paint.setColor(Color.BLUE);
-                    if (currentPlayerRole == PlayerRole.GOALKEEPER && showAllHotspots) {
+                    if ((currentPlayerRole == PlayerRole.GOALKEEPER || currentPlayerRole == PlayerRole.SHOOTER) && showAllHotspots) {
                         for (Rect hotspot : hotspots) {
                             backBufferCanvas.drawRect(hotspot, paint);
                         }
@@ -411,11 +410,11 @@ public class GameView extends SurfaceView implements Runnable {
                     }
 
                     paint.setColor(Color.WHITE);
-                    paint.setTextSize(100);
+                    paint.setTextSize(200);
                     Rect bounds = new Rect();
                     paint.getTextBounds(gameMessage, 0, gameMessage.length(), bounds);
-                    int x = (screenX - bounds.width()) / 2;
-                    int y = (screenY + bounds.height()) / 2;
+                    int x = (screenX - bounds.width()) / 2 - 20;
+                    int y = (screenY + bounds.height()) - 500;
 
                     backBufferCanvas.drawText(gameMessage, x, y, paint);
 
@@ -483,16 +482,18 @@ public class GameView extends SurfaceView implements Runnable {
             this.postDelayed(() -> {
                 updateGameMessage("", true);
                 scoreUpdated = false;
-            }, 2000);
+            }, 800);
         }
 
         if (currentPlayerRole == PlayerRole.SHOOTER) {
             currentPlayerRole = PlayerRole.GOALKEEPER;
             showAllHotspots = true;
             requireNewTouchForGoalkeeper = true;
+            goalkeeperTouchAllowed = true;
         } else {
             currentPlayerRole = PlayerRole.SHOOTER;
-            showAllHotspots = false;
+            showAllHotspots = true;
+            shooterTouchAllowed = true;
         }
 
         resetBallPosition();
@@ -517,8 +518,6 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     public void updateGameMessage(String newMessage, boolean shouldClear) {
-        Log.d("GameMessageUpdate", "Before update: " + gameMessage + ", messageDisplayed: " + messageDisplayed);
-
         if (shouldClear) {
             gameMessage = "";
             messageDisplayed = false;
@@ -528,8 +527,6 @@ public class GameView extends SurfaceView implements Runnable {
                 messageDisplayed = true;
             }
         }
-
-        Log.d("GameMessageUpdate", "After update: " + gameMessage + ", messageDisplayed: " + messageDisplayed);
     }
 
 
