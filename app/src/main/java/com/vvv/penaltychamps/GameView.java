@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -478,6 +479,15 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void switchRoles() {
 
+        if (scoreManager.isBestOfFiveMet()) {
+            int winner = scoreManager.getWinner();
+            if (winner != -1) {
+                Log.d("GameDebug", "Player " + (winner + 1) + " wins!");
+                updateGameMessage("Player " + (winner + 1) + " wins!", false);
+                return;
+            }
+        }
+
         if (scoreUpdated) {
             this.postDelayed(() -> {
                 updateGameMessage("", true);
@@ -518,6 +528,7 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     public void updateGameMessage(String newMessage, boolean shouldClear) {
+        Log.d("GameDebug", "Update Message: " + newMessage);
         if (shouldClear) {
             gameMessage = "";
             messageDisplayed = false;
@@ -550,3 +561,4 @@ public class GameView extends SurfaceView implements Runnable {
         GOALKEEPER
     }
 }
+
