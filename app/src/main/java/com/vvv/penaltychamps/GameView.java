@@ -1,5 +1,6 @@
 package com.vvv.penaltychamps;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -318,7 +319,6 @@ public class GameView extends SurfaceView implements Runnable {
                             scoreManager.increment(1, "save");
                             updateGameMessage("SAVED!", false);
                         }
-
                         scoreUpdated = true;
                     }
 
@@ -481,7 +481,16 @@ public class GameView extends SurfaceView implements Runnable {
 
         if (scoreManager.isBestOfFiveMet()) {
             int winner = scoreManager.getWinner();
-            if (winner != -1) {
+            if (!scoreManager.canCatchUp()) {
+                this.post(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setTitle("Game Over")
+                            .setMessage("Player " + (winner + 1) + " wins!\nPlayer 1 Score: " + scoreManager.getScore(0) + "\nPlayer 2 Score: " + scoreManager.getScore(1))
+                            .setPositiveButton("OK", (dialog, which) -> {
+                            })
+                            .create()
+                            .show();
+                });
                 Log.d("GameDebug", "Player " + (winner + 1) + " wins!");
                 updateGameMessage("Player " + (winner + 1) + " wins!", false);
                 return;
