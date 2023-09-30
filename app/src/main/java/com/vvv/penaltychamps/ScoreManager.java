@@ -1,6 +1,7 @@
 package com.vvv.penaltychamps;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ScoreManager {
     private final int[] scores;
@@ -27,6 +28,13 @@ public class ScoreManager {
         return scores[0] >= 5 || scores[1] >= 5;
     }
 
+    public boolean isGameOver() {
+        if (Math.abs(scores[0] - scores[1]) >= 2) {
+            return true;
+        }
+        return isBestOfFiveMet() && !canCatchUp();
+    }
+
     public int getWinner() {
         if (scores[0] >= 5) return 0;
         if (scores[1] >= 5) return 1;
@@ -43,6 +51,10 @@ public class ScoreManager {
 
     public int getScore(int playerIndex) {
         return scores[playerIndex];
+    }
+
+    public void resetScore() {
+        Arrays.fill(scores, 0);
     }
 }
 

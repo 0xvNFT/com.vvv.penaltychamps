@@ -479,22 +479,21 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void switchRoles() {
 
-        if (scoreManager.isBestOfFiveMet()) {
-            int winner = scoreManager.getWinner();
-            if (!scoreManager.canCatchUp()) {
-                this.post(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    builder.setTitle("Game Over")
-                            .setMessage("Player " + (winner + 1) + " wins!\nPlayer 1 Score: " + scoreManager.getScore(0) + "\nPlayer 2 Score: " + scoreManager.getScore(1))
-                            .setPositiveButton("OK", (dialog, which) -> {
-                            })
-                            .create()
-                            .show();
-                });
-                Log.d("GameDebug", "Player " + (winner + 1) + " wins!");
-                updateGameMessage("Player " + (winner + 1) + " wins!", false);
-                return;
-            }
+        if (scoreManager.isGameOver()) {
+            int winner = (scoreManager.getScore(0) > scoreManager.getScore(1)) ? 0 : 1;
+            this.post(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setTitle("Game Over")
+                        .setMessage("Player " + (winner + 1) + " wins!\nPlayer 1 Score: " + scoreManager.getScore(0) + "\nPlayer 2 Score: " + scoreManager.getScore(1))
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            ((MainActivity) getContext()).recreate();
+                        })
+                        .create()
+                        .show();
+            });
+            Log.d("GameDebug", "Player " + (winner + 1) + " wins!");
+            updateGameMessage("Player " + (winner + 1) + " wins!", false);
+            return;
         }
 
         if (scoreUpdated) {
