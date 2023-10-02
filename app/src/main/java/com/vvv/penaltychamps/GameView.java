@@ -397,7 +397,7 @@ public class GameView extends SurfaceView implements Runnable {
                     int goalPostBottom = goalPostY + goalPostHeight;
                     backBufferCanvas.drawRect(goalPostX, goalPostY, goalPostRight, goalPostBottom, paint);
 
-                    paint.setColor(Color.BLUE);
+                    paint.setColor(Color.argb(128, 0, 0, 255));
                     if ((currentPlayerRole == PlayerRole.GOALKEEPER || currentPlayerRole == PlayerRole.SHOOTER) && showAllHotspots) {
                         for (Rect hotspot : hotspots) {
                             backBufferCanvas.drawRect(hotspot, paint);
@@ -547,7 +547,6 @@ public class GameView extends SurfaceView implements Runnable {
             }
         }
     }
-
 
     public void resume() {
         isPlaying = true;
